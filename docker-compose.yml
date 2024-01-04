@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+  app:
+    image: obahamonde/my-puppeteer-app
+    build: .
+    ports:
+      - 8080:80
+    volumes:
+      - ./:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1

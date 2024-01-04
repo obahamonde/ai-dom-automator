@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-puppeteer-app
+  namespace: default
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: puppeteer
+  template:
+    metadata:
+      labels:
+        app: puppeteer
+    spec:
+      containers:
+        - name: puppeteer
+          image: obahamonde/my-puppeteer-app:latest
+          ports:
+            - containerPort: 80
+          envFrom:
+          - configMapRef:
+              name: assistants-app-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: puppeteer-lb
+  namespace: default
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":
+      { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:008356605572:certificate/fa85c693-73e1-492e-aa85-5830da4092dc
+    alb.ingress.kubernetes.io/role: arn:aws:iam::008356605572:role/AmazonEKSLoadBalancerControllerRole
+    kubernetes.io/ingress.class: alb
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector:
+    app: puppeteer
